@@ -37,7 +37,7 @@ class RegistroForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])  # Encripta la contraseña
+        user.set_password(self.cleaned_data["password"])  # Oculta la contraseña
         if commit:
             user.save()
         return user

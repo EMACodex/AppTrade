@@ -91,8 +91,8 @@ def perfil(request):
         if form.is_valid():
             user.first_name = form.cleaned_data['first_name']
             user.email = form.cleaned_data['email']
-            user.save()  # Guardar cambios en User
-            user_profile.save()  # Guardar perfil
+            user.save()  
+            user_profile.save()  
 
             messages.success(request, "Perfil actualizado correctamente.")
             return redirect('perfil')
@@ -107,7 +107,7 @@ def perfil(request):
 
 
 def precio_cripto(symbol):
-    api_url = f"https://api.pionex.com/api/v1/market/trades?symbol={symbol}_USDT&limit=1"
+    api_url = "https://api.pionex.com/api/v1/market/trades?symbol=" + symbol + "_USDT&limit=1"
     try:
         response = requests.get(api_url, timeout=5)
         data = response.json()
@@ -145,7 +145,6 @@ def register(request):
         if form.is_valid():
             user = form.save()
             
-            # Asegurar que no se cree un perfil duplicado
             UserProfile.objects.get_or_create(user=user)  
 
             login(request, user)
@@ -157,35 +156,34 @@ def register(request):
         form = RegistroForm()
 
     return render(request, 'register.html', {'form': form})
-
+#Esto es de prueba JI no he conseguido que funcionen las alertas POR AHORA
 def revisar_alertas():
     usuarios_con_alertas = UserProfile.objects.filter(receive_alerts=True, alert_price__isnull=False, alert_cripto__isnull=False)
 
     for usuario in usuarios_con_alertas:
         cripto = usuario.alert_cripto.ticker
         precio_objetivo = usuario.alert_price
-        precio_actual = precio_cripto(cripto)  # Obtiene el precio actual con tu función existente
+        precio_actual = precio_cripto(cripto)  
 
         if precio_actual and precio_actual >= precio_objetivo:
             enviar_alerta_email(usuario.user.email, cripto, precio_actual, precio_objetivo)
 
 
 def enviar_alerta_email(usuario_email, cripto_ticker, precio_actual):
-    # Asunto y mensaje del correo
     subject = f"Alerta: {cripto_ticker} ha superado el precio de alerta"
     message = f"El precio de {cripto_ticker} ha alcanzado {precio_actual} USDT, que es superior al precio de alerta que configuraste."
     
     send_mail(
         subject,
         message,
-        settings.EMAIL_HOST_USER,  # Asegúrate de que esta esté configurada correctamente en settings.py
+        settings.EMAIL_HOST_USER,  
         [usuario_email],
         fail_silently=False,
     )
     
-    
+# esto es l Endpoint Django para obtener el precio para la grafiquita diablona
 def get_price(request, ticker):
-    price = precio_cripto(ticker)  # Usamos tu función existente para obtener el precio
+    price = precio_cripto(ticker)  
     if price is not None:
         return JsonResponse({'price': price})
     return JsonResponse({'error': 'No se pudo obtener el precio'}, status=500)

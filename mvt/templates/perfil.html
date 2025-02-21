@@ -4,7 +4,6 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4">Perfil</h2>
 
-    <!-- Formulario de perfil -->
     <form method="POST" class="card p-4">
         {% csrf_token %}
         
@@ -46,7 +45,7 @@
         <button type="submit" class="btn btn-primary">Guardar cambios</button>
     </form>
 
-    <!-- Botón de logout -->
+    <!-- logout -->
     <form action="{% url 'logout' %}" method="post" class="mt-4">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Cerrar sesión</button>

@@ -22,14 +22,12 @@
             </div>
         {% endfor %}
 
-        <!-- Agregamos la gráfica solo si hay datos -->
         <canvas id="cryptoChart"></canvas>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <script>
             var ctx = document.getElementById('cryptoChart').getContext('2d');
 
-            // Creamos la gráfica
             var chart = new Chart(ctx, {
                 type: 'line',  // Tipo de gráfica
                 data: {
