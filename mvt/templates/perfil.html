@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Perfil</h2>
+
+    <!-- Formulario de perfil -->
+    <form method="POST" class="card p-4">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            {{ form.first_name }}
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Correo Electrónico</label>
+            {{ form.email }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_currency" class="form-label">Moneda preferida</label>
+            {{ form.currency }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_country" class="form-label">País</label>
+            {{ form.country }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_alert_price" class="form-label">Precio de alerta</label>
+            {{ form.alert_price }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_alert_cripto" class="form-label">Criptomoneda de alerta</label>
+            {{ form.alert_cripto }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_receive_alerts" class="form-label">Recibir alertas</label>
+            {{ form.receive_alerts }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    </form>
+
+    <!-- Botón de logout -->
+    <form action="{% url 'logout' %}" method="post" class="mt-4">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Cerrar sesión</button>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<nav class="navbar bg-body-tertiary">
+    <form action="{% url 'añadirCripto' %}" class="d-flex" role="search" method="POST">
+        {% csrf_token %}
+        <input class="form-control me-2" type="search" placeholder="Añadir al portfolio" aria-label="Search" name="ticker" required>
+        <button class="btn btn-outline-secondary" type="submit">Añadir Crypto</button>
+    </form>
+</nav>
+
+<br/><br/>
+
+
+<table class="table table-striped table-bordered table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Simbolo</th>
+        <th scope="col">ID Trading</th>
+        <th scope="col">Precio USD</th>
+        <th scope="col">Tamaño</th>
+        <th scope="col">Accion</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% if ticker %}
+        {% for sublist in output %}
+            {% for list_item in sublist %}
+                <tr>
+                    <th scope="row">{{forloop.parentloop.counter}}</th>
+                    <td>{{ list_item.symbol }}</td>
+                    <td>{{ list_item.tradeId }}</td>
+                    <td>{{ list_item.price }} $</td>
+                    <td>{{ list_item.size }} %</td>
+                    <td>
+                        {%if list_item.id%}
+                            <a href="{% url 'delete' cripto_id=list_item.id %}" class="btn btn-primary">Eliminar {{list_item.symbol}}</a>
+                        {%else%}
+                            Sin ID
+                        {%endif%}
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    {%endif%}
+    </tbody>
+</table>
+{% endblock %}
+
+
+
+
+

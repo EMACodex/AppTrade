@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if ticker %}
+    <h4>{{ ticker }}</h4>
+    <p>Los datos se actualizarán automáticamente.</p>
+{% endif %}
+
+{% if trades %}
+    {% if trades == "Error" %}
+        <p>El símbolo de la cripto no es correcto, intenta de nuevo...</p>
+    {% else %}
+        {% for trade in trades %}
+            <h3><strong>Criptomoneda:</strong> {{ trade.symbol }}</h3>
+            <div>
+                <br/>
+                <strong>Trade ID:</strong> {{ trade.tradeId }}<br/>
+                <strong>Precio:</strong> {{ trade.price }} USDT<br/>
+                <strong>Tamaño:</strong> {{ trade.size }}<br/>
+                <hr>
+            </div>
+        {% endfor %}
+
+        <!-- Agregamos la gráfica solo si hay datos -->
+        <canvas id="cryptoChart"></canvas>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            var ctx = document.getElementById('cryptoChart').getContext('2d');
+
+            // Creamos la gráfica
+            var chart = new Chart(ctx, {
+                type: 'line',  // Tipo de gráfica
+                data: {
+                    labels: [],  // Etiquetas de tiempo
+                    datasets: [{
+                        label: 'Precio de {{ ticker }} (USDT)',
+                        data: [],  // Datos de precios
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Tiempo'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Precio (USDT)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Función para obtener el precio y actualizar la gráfica
+            function fetchCryptoData() {
+                fetch('/get_price/{{ ticker }}')  // Endpoint Django para obtener el precio
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.price) {
+                            const time = new Date().toLocaleTimeString();  // Hora actual
+                            chart.data.labels.push(time);
+                            chart.data.datasets[0].data.push(data.price);
+                            chart.update();
+                        }
+                    })
+                    .catch(error => console.error('Error obteniendo datos de la API:', error));
+            }
+
+            // Actualizar la gráfica cada 10 segundos
+            setInterval(fetchCryptoData, 10000);
+        </script>
+    {% endif %}
+{% endif %}
+
+{% endblock %}
