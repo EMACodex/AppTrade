@@ -51,7 +51,7 @@ def añadirCripto(request):
     output = []
     
     for ticker_item in ticker_list:
-        api_url = f"https://api.pionex.com/api/v1/market/trades?symbol={str(ticker_item.ticker)}_USDT&limit=1"
+        api_url = "https://api.pionex.com/api/v1/market/trades?symbol=" + str(ticker_item.ticker) + "_USDT&limit=1"
         try:
             api_request = requests.get(api_url, timeout=5)
             api_data = api_request.json()
@@ -170,8 +170,8 @@ def revisar_alertas():
 
 
 def enviar_alerta_email(usuario_email, cripto_ticker, precio_actual):
-    subject = f"Alerta: {cripto_ticker} ha superado el precio de alerta"
-    message = f"El precio de {cripto_ticker} ha alcanzado {precio_actual} USDT, que es superior al precio de alerta que configuraste."
+    subject = "Alerta:"  + cripto_ticker + "ha superado el precio de alerta"
+    message = "El precio de " + cripto_ticker + "ha alcanzado" + precio_actual +  "USD, que es superior al precio de alerta que configuraste."
     
     send_mail(
         subject,
