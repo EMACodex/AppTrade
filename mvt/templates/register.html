@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 
 {% block content %}
 <div class="container mt-5">
@@ -41,4 +41,12 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("form");
+        form.addEventListener("submit", function () {
+            window.location.href = "{% url 'home' %}";
+        });
+    });
+</script>
 {% endblock %}
