@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    {% if ticker %}
+        <div class="text-center">
+            <h2 class="text-primary">{{ ticker }}</h2>
+            <p class="text-muted">Los datos se actualizarán automáticamente.</p>
+        </div>
+    {% endif %}
+
+    {% if trades %}
+        {% if trades == "Error" %}
+            <div class="alert alert-danger text-center" role="alert">
+                El símbolo de la cripto no es correcto. Intenta de nuevo...
+            </div>
+        {% else %}
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-lg p-3 mb-4 bg-body rounded">
+                        <div class="card-body">
+                            {% for trade in trades %}
+                                <h3 class="card-title text-center text-success">{{ trade.symbol }}</h3> 
+                                <hr>
+                                <p><strong>Trade ID:</strong> <span id="crypto-tradeId">{{ trade.tradeId }}</span></p>
+                                <p><strong>Precio:</strong> <span id="crypto-price" class="text-success fs-4">${{ trade.price|floatformat:2 }} USD</span></p>
+                                <p><strong>Tamaño:</strong> <span id="crypto-size">{{ trade.size }}</span></p>
+                                <hr>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor de la gráfica con fondo -->
+            <div class="chart-container" style="position: relative; height:400px; width:100%; background: linear-gradient(to right, #e0f7fa, #ffffff); border-radius: 10px; padding: 20px;">
+                <canvas id="cryptoChart"></canvas>
+            </div>
+
+            <!-- Script de Chart.js -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+
+                
+                //Configuración del gráfico de precios con Chart.js 
+               
+                var ctx = document.getElementById('cryptoChart').getContext('2d');
+            
+                var chart = new Chart(ctx, {
+                    type: 'line',  // Tipo de gráfico: línea
+                    data: {
+                        labels: [], // Etiquetas para el eje X (tiempo)
+                        datasets: [{
+                            label: 'Precio de {{ ticker }} (USDT)', // Etiqueta del dataset con el símbolo de la criptomoneda
+                            data: [],  // Datos del precio de la criptomoneda
+                            borderColor: 'rgba(75, 192, 192, 1)',  // Color de la línea del gráfico
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)', // Color de fondo semitransparente
+                            borderWidth: 2,  // Grosor de la línea
+                            pointRadius: 3,  // Tamaño de los puntos en la línea
+                            pointBackgroundColor: 'rgba(75, 192, 192, 1)',  // Color de los puntos
+                            fill: true  // Activa el fondo debajo de la línea
+                        }]
+                    },
+                    options: {
+                        responsive: true,  // Hace que el gráfico se ajuste al tamaño de la pantalla
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Tiempo'  // Etiqueta del eje X
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Precio (USDT)'  // Etiqueta del eje Y
+                                }
+                            }
+                        }
+                    }
+                });
+            
+                
+                //Función para obtener datos de la API y actualizar el gráfico en tiempo real
+               
+                function datosCripto() {
+                    fetch('/obtenerPrecio/{{ ticker }}')  // Hace una petición al endpoint para obtener el precio
+                        .then(response => response.json())  // Convierte la respuesta en JSON
+                        .then(data => {
+                            if (data && data.price) {  // Si hay datos válidos
+                                const time = new Date().toLocaleTimeString();  // Obtiene la hora actual como etiqueta
+                                chart.data.labels.push(time);  // Agrega la hora al eje X
+                                chart.data.datasets[0].data.push(data.price);  // Agrega el precio al eje Y
+                                chart.update();  // Refresca el gráfico con los nuevos datos
+                            }
+                        })
+                        .catch(error => console.error('Error obteniendo datos:', error));  // Manejo de errores
+                }
+            
+                
+                //Llama a la función datosCripto cada 10 segundos para actualizar el gráfico
+                
+                setInterval(datosCripto, 10000);
+             
+                //Función para actualizar los datos en la vista principal 
+               
+                function actualizarDatosHome() {
+                    fetch('/obtenerPrecio/{{ ticker }}')  // Hace una petición a la API para obtener el precio
+                        .then(response => response.json())  // Convierte la respuesta en JSON
+                        .then(data => {
+                            if (data.tradeId && data.price && data.size) {  // Verifica si hay datos válidos
+                                document.getElementById('crypto-tradeId').innerText = data.tradeId;  // Actualiza el ID del trade
+                                document.getElementById('crypto-price').innerText = `$${data.price.toFixed(2)} USD`;  // Muestra el precio formateado
+                                document.getElementById('crypto-size').innerText = data.size;  // Muestra el tamaño de la transacción
+                            }
+                        })
+                        .catch(error => console.error('Error obteniendo datos:', error));  // Manejo de errores
+                }
+
+                //Llama a la función actualizarDatosHome cada 10 segundos para refrescar los datos en la página
+                
+                setInterval(actualizarDatosHome, 10000);
+            </script>
+        {% endif %}
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -9,31 +9,54 @@
                     <h3>Registro</h3>
                 </div>
                 <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
                     <form method="POST">
                         {% csrf_token %}
+                        
                         <div class="mb-3">
                             <label class="form-label">Nombre de Usuario</label>
                             {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="text-danger">{{ form.username.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Correo Electrónico</label>
                             {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">{{ form.email.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Nombre</label>
                             {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger">{{ form.first_name.errors }}</div>
+                            {% endif %}
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Apellido</label>
-                            {{ form.last_name }}
-                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Contraseña</label>
                             {{ form.password }}
+                            {% if form.password.errors %}
+                                <div class="text-danger">{{ form.password.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <button type="submit" class="btn btn-primary w-100">Registrarse</button>
                     </form>
                 </div>
+                
                 <div class="card-footer text-center">
                     <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}">Iniciar sesión</a></p>
                 </div>
@@ -41,12 +64,21 @@
         </div>
     </div>
 </div>
+<!-- 
+    Script que redirige al usuario a la página principal después de enviar un formulario.
+    Se ejecuta cuando el documento ha terminado de cargarse.
+-->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Selecciona el formulario en la página
         const form = document.querySelector("form");
+
+        // Agrega un evento al formulario que se ejecuta cuando se envía
         form.addEventListener("submit", function () {
-            window.location.href = "{% url 'home' %}";
+            // Redirige al usuario a la página principal
+            window.location.href = "{% url 'principal' %}";
         });
     });
 </script>
+
 {% endblock %}

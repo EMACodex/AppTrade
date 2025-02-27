@@ -18,16 +18,6 @@
         </div>
 
         <div class="mb-3">
-            <label for="id_currency" class="form-label">Moneda preferida</label>
-            {{ form.currency }}
-        </div>
-
-        <div class="mb-3">
-            <label for="id_country" class="form-label">País</label>
-            {{ form.country }}
-        </div>
-
-        <div class="mb-3">
             <label for="id_alert_price" class="form-label">Precio de alerta</label>
             {{ form.alert_price }}
         </div>
@@ -51,5 +41,23 @@
         <button type="submit" class="btn btn-danger">Cerrar sesión</button>
     </form>
 </div>
+<!-- 
+    Script para verificar alertas de criptomonedas periódicamente. 
+    Hace una solicitud a la API para comprobar si se deben enviar notificaciones al usuario.
+-->
+<script>
+    function verificarAlertas() {
+        // Realiza una solicitud GET a la URL "/verificaralerta/" para comprobar alertas
+        fetch("/verificaralerta/", { method: "GET" })
+            .then(response => response.json()) // Convierte la respuesta a JSON
+            .then(data => console.log("Verificación completada:", data)) // Muestra el resultado en la consola
+            .catch(error => console.error("Error verificando alertas:", error)); // Manejo de errores
+    }
+
+    // Ejecuta la función verificarAlertas cada 60 segundos (1 minuto)
+    setInterval(verificarAlertas, 60000);
+</script>
+
+
 
 {% endblock %}

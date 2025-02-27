@@ -1,41 +1,24 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# Modelo que representa una criptomoneda en la base de datos.
 class Cripto(models.Model):
+    # Campo para almacenar el ticker de la criptomoneda (ej: BTC, ETH).
+    # Se define como único para evitar duplicados.
     ticker = models.CharField(max_length=10, unique=True)
 
+    # Método que devuelve el ticker como representación en cadena del objeto.
     def __str__(self):
         return self.ticker
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    CURRENCY_CHOICES = [
-        ('USD', 'USD - Dólar estadounidense'),
-        ('EUR', 'EUR - Euro'),
-        ('BTC', 'BTC - Bitcoin'),
-        ('JPY', 'JPY - Yen japonés'),
-        ('GBP', 'GBP - Libra esterlina'),
-        ('AUD', 'AUD - Dólar australiano'),
-        ('CAD', 'CAD - Dólar canadiense'),
-        ('CHF', 'CHF - Franco suizo'),
-        ('CNH', 'CNH - Yuan chino'),
-    ]
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
-
-    COUNTRY_CHOICES = [
-        ('ES', 'España'), ('FR', 'Francia'), ('DE', 'Alemania'),
-        ('IT', 'Italia'), ('NL', 'Países Bajos'), ('BE', 'Bélgica'),
-        ('PT', 'Portugal'), ('SE', 'Suecia'), ('AT', 'Austria'),
-        ('FI', 'Finlandia'), ('DK', 'Dinamarca'), ('PL', 'Polonia'),
-        ('IE', 'Irlanda'), ('GR', 'Grecia'), ('CZ', 'República Checa'),
-        ('HU', 'Hungría'), ('SK', 'Eslovaquia'), ('RO', 'Rumanía'),
-    ]
-    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=True)
-
-    receive_alerts = models.BooleanField(default=False)
-    alert_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    alert_cripto = models.ForeignKey(Cripto, null=True, blank=True, on_delete=models.SET_NULL, related_name="user_alerts")
-
+# Modelo que representa el perfil de usuario y sus preferencias de alertas de criptomonedas.
+class UserProfile(models.Model):   
+    user = models.OneToOneField(User, on_delete=models.CASCADE)  # Si el usuario se elimina, su perfil también se eliminará (on_delete=models.CASCADE).
+    alert_cripto = models.ForeignKey(Cripto, on_delete=models.SET_NULL, null=True, blank=True)  # Cripto a monitorear
+    alert_price = models.FloatField(null=True, blank=True)  # Precio de alerta
+    receive_alerts = models.BooleanField(default=False)  # Activar o desactivar alertas
+    
+    
     def __str__(self):
         return self.user.username

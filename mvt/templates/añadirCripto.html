@@ -6,8 +6,8 @@
 <nav class="navbar bg-body-tertiary">
     <form action="{% url 'añadirCripto' %}" class="d-flex" role="search" method="POST">
         {% csrf_token %}
-        <input class="form-control me-2" type="search" placeholder="Añadir al portfolio" aria-label="Search" name="ticker" required>
-        <button class="btn btn-outline-secondary" type="submit">Añadir Crypto</button>
+        <input class="form-control me-2" type="search" placeholder="Añadir al portfolio de criptos" aria-label="Search" name="ticker" required>
+        <button class="btn btn-outline-success" type="submit">Añadir Criptomoneda</button>
     </form>
 </nav>
 
@@ -29,25 +29,56 @@
     {% if ticker %}
         {% for sublist in output %}
             {% for list_item in sublist %}
-                <tr>
-                    <th scope="row">{{forloop.parentloop.counter}}</th>
+                <tr class="crypto-row" data-ticker="{{ list_item.symbol }}">
+                    <th scope="row">{{ forloop.parentloop.counter }}</th>
                     <td>{{ list_item.symbol }}</td>
-                    <td>{{ list_item.tradeId }}</td>
-                    <td>{{ list_item.price }} $</td>
-                    <td>{{ list_item.size }} %</td>
+                    <td class="crypto-tradeId">{{ list_item.tradeId }}</td>
+                    <td class="crypto-price">{{ list_item.price|floatformat:2 }} $</td>
+                    <td class="crypto-size">{{ list_item.size }} %</td>
                     <td>
-                        {%if list_item.id%}
-                            <a href="{% url 'delete' cripto_id=list_item.id %}" class="btn btn-primary">Eliminar {{list_item.symbol}}</a>
-                        {%else%}
+                        {% if list_item.id %}
+                            <a href="{% url 'eliminar' cripto_id=list_item.id %}" class="btn btn-primary">Eliminar {{ list_item.symbol }}</a>
+                        {% else %}
                             Sin ID
-                        {%endif%}
+                        {% endif %}
                     </td>
-                </tr>
+                </tr>            
             {% endfor %}
         {% endfor %}
     {%endif%}
     </tbody>
 </table>
+<script>
+    //Función para actualizar los datos de todas las criptomonedas en la tabla 
+    function actualizarDatosCriptos() {
+        let filas = document.querySelectorAll(".crypto-row"); // Selecciona todas las filas de la tabla con la clase "crypto-row"
+
+        filas.forEach(fila => {  // Itera sobre cada fila de la tabla
+            let ticker = fila.getAttribute("data-ticker"); // Obtiene el símbolo de la criptomoneda desde el atributo "data-ticker"
+            let tradeIdElemento = fila.querySelector(".crypto-tradeId"); // Selecciona el elemento que muestra el trade ID
+            let precioElemento = fila.querySelector(".crypto-price"); // Selecciona el elemento que muestra el precio
+            let sizeElemento = fila.querySelector(".crypto-size"); // Selecciona el elemento que muestra el tamaño de la transacción
+
+            //Llamada a la API de Django para obtener los datos de la criptomoneda específica 
+
+            fetch(`/obtenerPrecio/${ticker}`)  
+                .then(response => response.json())  // Convierte la respuesta en JSON
+                .then(data => {
+                    if (data.tradeId && data.price && data.size) {  // Verifica si los datos recibidos son válidos
+                        tradeIdElemento.innerText = data.tradeId; // Actualiza el trade ID en la tabla
+                        precioElemento.innerText = `$${data.price.toFixed(2)}`; // Actualiza el precio con formato de moneda
+                        sizeElemento.innerText = data.size; // Actualiza el tamaño de la transacción
+                    }
+                })
+                .catch(error => console.error(`Error obteniendo datos de ${ticker}:`, error));  // Manejo de errores
+        });
+    }
+ 
+    //Llama a la función actualizarDatosCriptos cada 5 segundos para mantener la información actualizada en la tabla 
+
+    setInterval(actualizarDatosCriptos, 5000);
+</script>
+
 {% endblock %}
 
 

@@ -23,18 +23,27 @@
                     </form>
                 </div>
                 <div class="card-footer text-center">
-                    <p>¿No tienes una cuenta? <a href="{% url 'register' %}">Regístrate aquí</a></p>
+                    <p>¿No tienes una cuenta? <a href="{% url 'registro' %}">Regístrate aquí</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<!-- 
+    Script que se ejecuta cuando la página ha cargado completamente. 
+    Se encarga de redirigir al usuario a la página principal después de enviar el formulario.
+-->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Selecciona el formulario de la página.
         const form = document.querySelector("form");
+
+        // Agrega un evento que escucha cuando el formulario es enviado.
         form.addEventListener("submit", function () {
-            window.location.href = "{% url 'home' %}";
+            // Redirige a la página principal después del envío del formulario.
+            window.location.href = "{% url 'principal' %}";
         });
     });
 </script>
+
 {% endblock %}
