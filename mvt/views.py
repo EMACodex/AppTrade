@@ -30,15 +30,17 @@ def principal(request):
             api_request = requests.get(api_url, timeout=5)
             api_data = api_request.json()
             
-            if "data" in api_data and "trades" in api_data["data"] and api_data["data"]["trades"]:
+            if api_data.get("data", {}).get("trades"):
                 trades = api_data["data"]["trades"]
                 for trade in trades:
                     trade["symbol"] = trade["symbol"].replace("_USDT", "")
             else:
-                trades = "Error: No se encontraron datos para esta criptomoneda."
+                messages.error(request, "La criptomoneda no se encuentra en la API.")
+                return redirect('principal')
 
         except requests.RequestException:
-            trades = "Error: No se pudo conectar con la API."
+            messages.error(request, "No se pudo conectar con la API.")
+            return redirect('principal')
 
         return render(request, 'principal.html', {'trades': trades, 'ticker': ticker})
     
@@ -50,24 +52,49 @@ Función para añadir una criptomoneda a la base de datos
 Permite al usuario añadir una criptomoneda a la base de datos.
 También obtiene y muestra los precios de todas las criptomonedas almacenadas en la base de datos.
 """
-
+@login_required
 def añadirCripto(request):
     if request.method == 'POST':
-        form = CriptoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "La cripto ha sido añadida!")
-            return redirect('añadirCripto')        
-    
-    ticker_list = Cripto.objects.all().order_by('ticker')
-    output = []
-    
-    for ticker_item in ticker_list:
-        api_url = "https://api.pionex.com/api/v1/market/trades?symbol=" + str(ticker_item.ticker) + "_USDT&limit=1"
+        ticker = request.POST.get('ticker', '').strip().upper()
+
+        if not ticker:
+            messages.error(request, "Introduce un símbolo de criptomoneda válido.")
+            return redirect('añadirCripto')
+
+        # Verificar si la cripto ya existe para este usuario
+        if Cripto.objects.filter(ticker=ticker, usuario=request.user).exists():
+            messages.error(request, "Ya has añadido esta criptomoneda.")
+            return redirect('añadirCripto')
+
+        # Verificar si la cripto existe en la API
+        api_url = "https://api.pionex.com/api/v1/market/trades?symbol=" + ticker + "_USDT&limit=1"
         try:
             api_request = requests.get(api_url, timeout=5)
             api_data = api_request.json()
-            if "data" in api_data and "trades" in api_data["data"] and api_data["data"]["trades"]:
+
+            if not api_data.get("data", {}).get("trades"):
+                messages.error(request, "La criptomoneda no existe en la API y no se ha añadido.")
+                return redirect('añadirCripto')
+
+        except requests.RequestException:
+            messages.error(request, "No se pudo conectar con la API.")
+            return redirect('añadirCripto')
+
+        # Guardar la nueva criptomoneda asociada al usuario actual
+        Cripto.objects.create(ticker=ticker, usuario=request.user)
+        messages.success(request, "La cripto ha sido añadida!")
+        return redirect('añadirCripto')
+
+    # Obtener las criptomonedas del usuario actual
+    ticker_list = Cripto.objects.filter(usuario=request.user).order_by('ticker')
+    output = []
+
+    for ticker_item in ticker_list:
+        api_url = "https://api.pionex.com/api/v1/market/trades?symbol=" + ticker_item.ticker + "_USDT&limit=1"
+        try:
+            api_request = requests.get(api_url, timeout=5)
+            api_data = api_request.json()
+            if api_data.get("data", {}).get("trades"):
                 trades = api_data["data"]["trades"]
                 for trade in trades:
                     trade["symbol"] = trade["symbol"].replace("_USDT", "")
@@ -86,11 +113,12 @@ Función para eliminar una criptomoneda de la base de datos
 Permite eliminar una criptomoneda de la base de datos.
 Antes de eliminarla, se asegura de eliminar referencias en perfiles de usuario que la tengan configurada en alertas.
 """
+@login_required
 def eliminar(request, cripto_id):
     try:
-        item = Cripto.objects.get(id=cripto_id)
+        item = Cripto.objects.get(id=cripto_id, usuario=request.user)
         
-        UserProfile.objects.filter(alert_cripto=item).update(alert_cripto=None)  
+        UserProfile.objects.filter(user=request.user, alert_cripto=item).update(alert_cripto=None)  
 
         item.delete()  
         messages.success(request, "La cripto ha sido eliminada!")
@@ -113,7 +141,7 @@ def perfil(request):
     user_profile, created = UserProfile.objects.get_or_create(user=user)
 
     if request.method == "POST":
-        form = PerfilForm(request.POST, instance=user_profile, user=user)
+        form = PerfilForm(request.POST, instance=user_profile, user=user, request = request)
         if form.is_valid():
             user.first_name = form.cleaned_data['first_name']
             user.email = form.cleaned_data['email']
@@ -124,7 +152,7 @@ def perfil(request):
             return redirect('perfil')
 
     else:
-        form = PerfilForm(instance=user_profile, user=user)
+        form = PerfilForm(instance=user_profile, user=user, request=request)
 
     return render(request, 'perfil.html', {'form': form})
 

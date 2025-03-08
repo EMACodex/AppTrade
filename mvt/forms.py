@@ -1,6 +1,9 @@
 from django import forms
 from .models import *
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.contrib import messages
+import re
 
 """
 Formulario para agregar una nueva criptomoneda al sistema.
@@ -20,13 +23,13 @@ class PerfilForm(forms.ModelForm):
     first_name = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
     alert_cripto = forms.ModelChoiceField(
-    queryset=Cripto.objects.all().order_by('ticker'),  
-    required=False,
-    widget=forms.Select(attrs={'class': 'form-control'})
+        queryset=Cripto.objects.none(),  
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     
     # Campo para definir el precio de alerta que activará una notificación.
-    alert_price = forms.FloatField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    alert_price = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     
     # Campo para activar o desactivar las alertas de precio.
     receive_alerts = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
@@ -37,13 +40,29 @@ class PerfilForm(forms.ModelForm):
 
     # Método para inicializar el formulario con valores predeterminados basados en el usuario autenticado.
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request' , None)
         user = kwargs.pop('user', None)  # Obtener usuario
         super().__init__(*args, **kwargs)
 
         if user:
-            # Asignar los datos del usuario al formulario
+            # Asignar los datos del usuario al formulario del perfil
             self.fields['first_name'].initial = user.first_name
             self.fields['email'].initial = user.email
+            self.fields['alert_cripto'].queryset = Cripto.objects.filter(usuario=user).distinct()
+
+
+    #Este metodo se usa para que en la alerta de precio solo se puedan introducir numeros , no letras        
+    def clean_alert_price(self):
+        alert_price = self.cleaned_data.get('alert_price')
+
+        if alert_price:
+            if not re.match(r'^\d+(\.\d+)?$', alert_price):
+                if self.request: 
+                    messages.error(self.request, "Solo se permiten números en el precio de alerta.")
+                raise ValidationError("Solo se permiten números y un punto decimal.")
+
+            return float(alert_price) 
+        return None 
 
 
 ''' 

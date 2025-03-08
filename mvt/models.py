@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 class Cripto(models.Model):
     # Campo para almacenar el ticker de la criptomoneda (ej: BTC, ETH).
     # Se define como único para evitar duplicados.
-    ticker = models.CharField(max_length=10, unique=True)
-
+    ticker = models.CharField(max_length=10)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     # Método que devuelve el ticker como representación en cadena del objeto.
     def __str__(self):
         return self.ticker
